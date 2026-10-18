@@ -1,4 +1,5 @@
 ## Interface: 120001
+## Version: 1.0.0
 ## Title: Fixture
 
 Fixture.lua

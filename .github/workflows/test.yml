@@ -27,3 +27,15 @@ jobs:
         env:
           FILE: ${{ steps.package.outputs.file }}
         run: diff <(unzip -Z1 "$FILE" | LC_ALL=C sort) tests/expected.txt
+
+      # Not a tag run, so call the script directly.
+      - name: Check version
+        env:
+          ADDON_PATH: tests/fixture
+          ADDON_OUTPUT_DIR: ${{ runner.temp }}
+        run: |
+          ADDON_VERSION=v1.0.0 bash package.sh
+          ! ADDON_VERSION=v1.0.1 bash package.sh || exit 1
+          cp -r tests/fixture "$RUNNER_TEMP/nolog"
+          sed -i 's/^## Version: .*/## Version: 1.0.1/' "$RUNNER_TEMP/nolog/Fixture.toc"
+          ! ADDON_PATH="$RUNNER_TEMP/nolog" ADDON_VERSION=v1.0.1 bash package.sh || exit 1

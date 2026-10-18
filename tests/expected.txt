@@ -1,4 +1,5 @@
 Fixture/
+Fixture/CHANGELOG.md
 Fixture/Fixture.lua
 Fixture/Fixture.toc
 Fixture/core/

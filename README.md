@@ -45,6 +45,7 @@ With options:
             docs/*
             mise.toml
             CLAUDE.md
+          check-version: true
           release: false
 
       - run: echo "${{ steps.package.outputs.file }}"
@@ -59,6 +60,7 @@ With options:
 | `exclude-file` | `exclude.lst`           | File with exclude patterns, relative to `path`. Skipped if missing.  |
 | `exclude`      |                         | Extra exclude patterns, one per line.                                |
 | `release`      | `true`                  | Create the release for the pushed tag and upload the zip. Ignored when the run is not for a tag. |
+| `check-version` | `false`                | On tag runs, fail before packaging unless the tag (without `v`) equals the TOC `## Version` and `CHANGELOG.md`, if present, has a `## [<version>]` entry. |
 | `token`        | `${{ github.token }}`   | Token used by `gh` to create the release.                            |
 
 ### Outputs
@@ -109,6 +111,7 @@ ADDON_OUTPUT_DIR=/tmp ADDON_EXCLUDE='docs/*' ../packager/package.sh
 | `ADDON_EXCLUDE_FILE` | `exclude-file`                             |
 | `ADDON_EXCLUDE`      | `exclude`                                  |
 | `ADDON_OUTPUT_DIR`   | output folder (default: current directory) |
+| `ADDON_VERSION`      | tag to check (`check-version`); unset skips the check |
 
 ## Versioning
 

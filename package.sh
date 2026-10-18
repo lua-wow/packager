@@ -7,6 +7,8 @@
 #   ADDON_EXCLUDE_FILE  file with zip exclude patterns, relative to ADDON_PATH (default: exclude.lst, skipped if missing)
 #   ADDON_EXCLUDE       extra exclude patterns, one per line
 #   ADDON_OUTPUT_DIR    where the zip is written (default: current directory)
+#   ADDON_VERSION       release tag (leading v ignored); if set, must match the TOC ## Version and,
+#                       when CHANGELOG.md exists, have a ## [<version>] entry there
 set -euo pipefail
 
 die() { echo "error: $*" >&2; exit 1; }
@@ -21,6 +23,18 @@ if [[ -z $name ]]; then
     shopt -u nullglob
     (( ${#tocs[@]} == 1 )) || die "expected exactly one .toc in $(pwd), found ${#tocs[@]}; set ADDON_NAME"
     name=${tocs[0]%.toc}
+fi
+
+if [[ -n ${ADDON_VERSION:-} ]]; then
+    version=${ADDON_VERSION#v}
+    [[ -f $name.toc ]] || die "$name.toc not found"
+    toc_version=$(sed -n 's/^## Version:[[:space:]]*//p' "$name.toc" | head -n 1 | tr -d '\r')
+    toc_version=${toc_version%"${toc_version##*[![:space:]]}"}
+    [[ -n $toc_version ]] || die "$name.toc has no ## Version"
+    [[ $toc_version == "$version" ]] || die "tag $ADDON_VERSION does not match $name.toc version $toc_version"
+    if [[ -f CHANGELOG.md ]]; then
+        grep -qF "## [$version]" CHANGELOG.md || die "CHANGELOG.md has no ## [$version] entry"
+    fi
 fi
 
 exclude_file=${ADDON_EXCLUDE_FILE:-exclude.lst}
@@ -51,6 +65,7 @@ zip -qr "$staging/flat.zip" . -x "${patterns[@]}" "$name.zip"
 unzip -q "$staging/flat.zip" -d "$staging/$name"
 (cd "$staging" && zip -qr "$file" "$name")
 
+unzip -Z1 "$file"
 echo "Created $file ($(unzip -Z1 "$file" | grep -cv '/$') files)"
 
 if [[ -n ${GITHUB_OUTPUT:-} ]]; then

@@ -21,6 +21,9 @@ inputs:
   release:
     description: Create the GitHub release for the pushed tag and upload the zip
     default: "true"
+  check-version:
+    description: "On tag runs, fail unless the tag matches the TOC ## Version and CHANGELOG.md (if present) has its entry"
+    default: "false"
   token:
     description: Token used to create the release
     default: ${{ github.token }}
@@ -45,6 +48,7 @@ runs:
         ADDON_EXCLUDE_FILE: ${{ inputs.exclude-file }}
         ADDON_EXCLUDE: ${{ inputs.exclude }}
         ADDON_OUTPUT_DIR: ${{ github.workspace }}
+        ADDON_VERSION: ${{ inputs.check-version == 'true' && github.ref_type == 'tag' && github.ref_name || '' }}
       run: bash "$GITHUB_ACTION_PATH/package.sh"
 
     - name: Release
