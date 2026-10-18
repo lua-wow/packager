@@ -1,0 +1,5 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# package.sh must keep LF or bash fails on the runner
+*.sh text eol=lf

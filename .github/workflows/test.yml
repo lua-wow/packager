@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Shellcheck
+        run: shellcheck package.sh
+
+      - name: Package fixture
+        id: package
+        uses: ./
+        with:
+          path: tests/fixture
+          exclude: notes.txt
+          release: false
+
+      - name: Check zip contents
+        env:
+          FILE: ${{ steps.package.outputs.file }}
+        run: diff <(unzip -Z1 "$FILE" | LC_ALL=C sort) tests/expected.txt

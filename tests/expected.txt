@@ -1,0 +1,5 @@
+Fixture/
+Fixture/Fixture.lua
+Fixture/Fixture.toc
+Fixture/core/
+Fixture/core/init.lua

@@ -1,0 +1,60 @@
+name: WoW Addon Packager
+description: Minimal GitHub Action to package World of Warcraft addons as ZIP files
+author: lua-wow
+branding:
+  icon: package
+  color: yellow
+
+inputs:
+  path:
+    description: Addon root directory
+    default: "."
+  name:
+    description: Addon folder name inside the zip, and the zip name (default is the single *.toc basename)
+    default: ""
+  exclude-file:
+    description: File with zip exclude patterns, relative to path; skipped if missing
+    default: exclude.lst
+  exclude:
+    description: Extra exclude patterns, one per line
+    default: ""
+  release:
+    description: Create the GitHub release for the pushed tag and upload the zip
+    default: "true"
+  token:
+    description: Token used to create the release
+    default: ${{ github.token }}
+
+outputs:
+  name:
+    description: Addon name
+    value: ${{ steps.package.outputs.name }}
+  file:
+    description: Absolute path of the zip
+    value: ${{ steps.package.outputs.file }}
+
+runs:
+  using: composite
+  steps:
+    - name: Package
+      id: package
+      shell: bash
+      env:
+        ADDON_PATH: ${{ inputs.path }}
+        ADDON_NAME: ${{ inputs.name }}
+        ADDON_EXCLUDE_FILE: ${{ inputs.exclude-file }}
+        ADDON_EXCLUDE: ${{ inputs.exclude }}
+        ADDON_OUTPUT_DIR: ${{ github.workspace }}
+      run: bash "$GITHUB_ACTION_PATH/package.sh"
+
+    - name: Release
+      if: inputs.release == 'true' && github.ref_type == 'tag'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        TAG: ${{ github.ref_name }}
+        FILE: ${{ steps.package.outputs.file }}
+      run: |
+        gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 ||
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes
+        gh release upload "$TAG" "$FILE" --repo "$GITHUB_REPOSITORY" --clobber
